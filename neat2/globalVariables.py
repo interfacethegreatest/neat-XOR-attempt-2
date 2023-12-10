@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Dec  7 10:03:14 2023
 
-@author: new
-"""
 # Initialize an empty lookup table
-lookup_table = {}
+import random
 
-# Set the maximum values for x and y
+import numpy as np
+
 x_max = 1000
 y_max = 1000
 
-# Populate the lookup table with unique integer variables for each combination of x and y
-for x in range(1, x_max + 1):
-    for y in range(1, y_max + 1):
-        unique_variable = (x - 1) * y_max + y  # Adjust this formula based on your requirements
-        lookup_table[(x, y)] = unique_variable
+# Create 2D arrays for x and y
+x_values, y_values = np.meshgrid(np.arange(1, x_max + 1), np.arange(1, y_max + 1), indexing='ij')
+
+# Calculate the unique variable using vectorized operations
+lookup_table = (x_values - 1) * y_max + y_values
 
 
 
@@ -78,12 +75,14 @@ class Connections:
 class Brain():
     
     globalVariableObj = None
-    nodeList = list()
+    nodeList = []
+    connList = []
     layerCount = 0
+    nodeLayer = tuple()
     
+ 
     
-    
-    def initInputNodes(self):
+    def initNodes(self):
         '''
         Generate input Nodes,
 
@@ -92,46 +91,96 @@ class Brain():
         None.
 
         '''
+        '''
+        input & bias node initiation
+        '''
         for i in range(self.globalVariableObj.inputNodes):
-            node = Node(self.nodeList.i, 0,0,0,0)
+            node = Node(i+1, 0,0,0,0)
             self.nodeList.append(node)
             
-        nodeBias = Node(self.globalVariableObj.inputNodes, 1,0,0,0)
+        nodeBias = Node(self.globalVariableObj.inputNodes+1, 1,0,0,0)
+        '''
+        hidden node initiation.
+        '''
         self.nodeList.append(nodeBias)
-    
-    def initHiddenNodes(self):
-        '''
-        test this and above function.
-
-        Returns
-        -------
-        None.
-
-        '''
+        self.layerCount+=1
         for i in range(self.globalVariableObj.hiddenNodes):
-            node = Node(self.nodeList.len()-1, 2, self.layerCount,0,0)
+            node = Node(len(self.nodeList)+1, 2, self.layerCount,0,0)
             self.nodeList.append(node)
-            
+        self.layerCount+=1
+        '''
+        output node initiation
+        '''
+        for i in range(self.globalVariableObj.outputNodes):
+            node = Node(len(self.nodeList)+1, 3, self.layerCount, 0,0)
+            self.nodeList.append(node)
     
     
+    def initConnections(self):
+        
+        '''
+        validate tomorrrow.
+        '''
+        
+        def initOutputHiddenConnections():
+            threshold = self.globalVariableObj.percentageConnections
+            for z in range(self.globalVariableObj.outputNodes):
+                outputNode = self.nodeList[self.globalVariableObj.inputNodes+self.globalVariableObj.hiddenNodes+1+z]
+                for y in range(self.globalVariableObj.hiddenNodes):
+                   hiddenNode = self.nodeList[y+self.globalVariableObj.inputNodes+1]
+                   randomNumber = random.random()
+                   if randomNumber >= threshold:
+                       setEnnabled = True
+                   else:
+                       setEnnabled = False
+                   connection = Connections(hiddenNode.nodeIdentifier, outputNode.nodeIdentifier, 
+                                            random.randint(-10, 10), setEnnabled, False)
+                   self.connList.append(connection)
+        
+        def initHiddenInputConnections():
+            for x in range(self.globalVariableObj.hiddenNodes):
+               hiddenNode = self.nodeList[x+self.globalVariableObj.inputNodes+1]
+               for y in range (self.globalVariableObj.inputNodes+1):
+                   inputNode = self.nodeList[y]
+                   randomNumber = random.random()
+                   if randomNumber >= self.globalVariableObj.percentageConnections:
+                       setEnnabled = True
+                   else:
+                       setEnnabled = False
+                   connection = Connections(inputNode.nodeIdentifier, hiddenNode.nodeIdentifier,
+                                            random.randint(-10,10), setEnnabled, False)
+                   self.connList.append(connection)
+        
+        initHiddenInputConnections()
+        initOutputHiddenConnections()
+         
+         
     
     
     
     def __init__(self, globalVariableObj = GlobalVariables):
         self.globalVariableObj = globalVariableObj
+        self.nodeLayer = (self.globalVariableObj.inputNodes, self.globalVariableObj.hiddenNodes, self.globalVariableObj.outputNodes)
         if self.globalVariableObj.hiddenNodes == 0:
-            layerCount = 1
+            self.layerCount = 1
         else:
-            layerCount == 2
+            self.layerCount == 2
+        self.initNodes()
+        self.initConnections()
+
             
       
+def main():
+ test = GlobalVariables(3,3,2,0.45) 
+   
+ BRAIN = Brain(test)
+ 
+ 
 
 
 
-
-
-
-
+if __name__=="__main__": 
+    main() 
 
 
 
