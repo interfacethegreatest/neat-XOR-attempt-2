@@ -4,23 +4,65 @@ import tkinter as tk
 
 class DrawBrain:
     
-    def __init__(self):
-        num_layers = 3
-        num_nodes = (1,3,2)
+    def __init__(self, inputNodes,hiddenNodes, outputNodes, percConnections):
+        globalVariable = GlobalVariables(inputNodes, outputNodes, hiddenNodes, percConnections)
+        brain = Brain(globalVariable)
+        num_layers = len(brain.nodeLayer)
+        num_nodes = brain.nodeLayer
         self.create_tkinter_window()
         canvas, rectangle_indexes = self.create_outlined_rectangle(1400, 900, num_layers)
-        self.draw_nodes(canvas, rectangle_indexes, num_nodes)
+        nodes = self.draw_nodes(canvas, rectangle_indexes, num_nodes, brain.nodeList)
+        self.draw_connections(canvas, nodes, brain.connList, brain.nodeList)
         self.root.mainloop()
     
- 
-    def draw_nodes(self, canvas, rectangle_indexes, num_nodes_list):
+    
+    
+    
+    
+    def draw_connections(self, canvas, node_indexes, conn_list, node_list):
+        for i in range(len(conn_list)):
+            origin_node = conn_list[i].in_node_ID-1
+            end_node = conn_list[i].out_Node_ID-1
+            origin_coordinate = node_indexes[origin_node]
+            end_coordinate = node_indexes[end_node]
+            # Draw a line between the origin and end coordinates
+            if conn_list[i].ennabled:
+             canvas.create_line(origin_coordinate[0], origin_coordinate[1],
+                               end_coordinate[0], end_coordinate[1], fill="Green", width=2)
+            else:
+                 canvas.create_line(origin_coordinate[0], origin_coordinate[1],
+                                   end_coordinate[0], end_coordinate[1], fill="Red", width=2)
+                 
+            
+            # Calculate the center point of the line
+            center_x = (origin_coordinate[0] + end_coordinate[0]) / 2
+            center_y = (origin_coordinate[1] + end_coordinate[1]) / 2
+
+            # Loop through node indexes and print conn_list text slightly to the right
+            offset_right = 15  # Adjust this value for the right offset
+            for index, node_index in enumerate(node_indexes):
+            # Offset slightly to the right
+             text_x = node_index[0] + offset_right
+             text_y = node_index[1]
+             '''
+            # Print conn_list text to the right of each node
+             canvas.create_text(text_x, text_y, text=conn_list[index], fill="blue", font=("Arial", 8), anchor="w")
+              '''            
+       
+                
+    
+    def draw_nodes(self, canvas, rectangle_indexes, num_nodes_list, nodes):
+     centreList = list()
      for rect_index, num_nodes in zip(rectangle_indexes, num_nodes_list):
         # Get the coordinates of the rectangle
         x0, y0, x1, y1 = canvas.coords(rect_index)
 
         # Calculate the height of each node
-        node_height = (y1 - y0) / num_nodes
-
+        if num_nodes > 0:
+         node_height = (y1 - y0) / num_nodes
+        else:
+            pass
+        
         # Draw nodes vertically within each rectangle
         for i in range(num_nodes):
             node_x0 = x0
@@ -32,12 +74,16 @@ class DrawBrain:
             # Calculate the center of the node
             center_x = (node_x0 + node_x1) / 2
             center_y = (node_y0 + node_y1) / 2
-
+            centreList.append((center_x, center_y))
             # Draw a white circle at the center
-            radius = min((node_x1 - node_x0) / 14, (node_y1 - node_y0) / 14)
-            canvas.create_oval(center_x - radius, center_y - radius, center_x + radius, center_y + radius, fill="red")
+            radius = 10  # Set your desired radius value
+            canvas.create_oval(center_x - radius, center_y - radius, center_x + radius, center_y + radius, fill="white")
             
-        canvas.pack()
+            
+     for y in range(len(centreList)):
+      canvas.create_text(centreList[y][0],centreList[y][1]+5, text= nodes[y], fill="blue", font=("Arial", 8), anchor = "center")
+     canvas.pack()
+     return centreList
 
 
 
@@ -92,9 +138,4 @@ class DrawBrain:
         return canvas, rectangle_indexes
 
 if __name__ == "__main__":
-    window = DrawBrain()
-
-
-
-    
-
+    window = DrawBrain(3,0,1,0)
