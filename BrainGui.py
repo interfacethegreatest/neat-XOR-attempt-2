@@ -4,8 +4,8 @@ import tkinter as tk
 
 class DrawBrain:
     
-    def __init__(self):
-        globalVariable = GlobalVariables(3, 3, 2, 0.75)
+    def __init__(self, inputNodes,hiddenNodes, outputNodes, percConnections):
+        globalVariable = GlobalVariables(inputNodes, outputNodes, hiddenNodes, percConnections)
         brain = Brain(globalVariable)
         num_layers = len(brain.nodeLayer)
         num_nodes = brain.nodeLayer
@@ -26,8 +26,14 @@ class DrawBrain:
             origin_coordinate = node_indexes[origin_node]
             end_coordinate = node_indexes[end_node]
             # Draw a line between the origin and end coordinates
-            canvas.create_line(origin_coordinate[0], origin_coordinate[1],
-                               end_coordinate[0], end_coordinate[1], fill="black", width=2)
+            if conn_list[i].ennabled:
+             canvas.create_line(origin_coordinate[0], origin_coordinate[1],
+                               end_coordinate[0], end_coordinate[1], fill="Green", width=2)
+            else:
+                 canvas.create_line(origin_coordinate[0], origin_coordinate[1],
+                                   end_coordinate[0], end_coordinate[1], fill="Red", width=2)
+                 
+            
             # Calculate the center point of the line
             center_x = (origin_coordinate[0] + end_coordinate[0]) / 2
             center_y = (origin_coordinate[1] + end_coordinate[1]) / 2
@@ -38,10 +44,10 @@ class DrawBrain:
             # Offset slightly to the right
              text_x = node_index[0] + offset_right
              text_y = node_index[1]
-
+             '''
             # Print conn_list text to the right of each node
              canvas.create_text(text_x, text_y, text=conn_list[index], fill="blue", font=("Arial", 8), anchor="w")
-            
+              '''            
        
                 
     
@@ -52,7 +58,10 @@ class DrawBrain:
         x0, y0, x1, y1 = canvas.coords(rect_index)
 
         # Calculate the height of each node
-        node_height = (y1 - y0) / num_nodes
+        if num_nodes > 0:
+         node_height = (y1 - y0) / num_nodes
+        else:
+            pass
         
         # Draw nodes vertically within each rectangle
         for i in range(num_nodes):
@@ -60,7 +69,7 @@ class DrawBrain:
             node_y0 = y0 + i * node_height
             node_x1 = x1
             node_y1 = node_y0 + node_height
-            canvas.create_rectangle(node_x0, node_y0, node_x1, node_y1, fill="red") 
+            canvas.create_rectangle(node_x0, node_y0, node_x1, node_y1, fill="black") 
 
             # Calculate the center of the node
             center_x = (node_x0 + node_x1) / 2
@@ -129,9 +138,4 @@ class DrawBrain:
         return canvas, rectangle_indexes
 
 if __name__ == "__main__":
-    window = DrawBrain()
-
-
-
-    
-
+    window = DrawBrain(3,0,1,0)
