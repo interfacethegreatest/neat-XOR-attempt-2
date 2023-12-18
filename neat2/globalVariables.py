@@ -47,7 +47,7 @@ class Node:
         self.sumOutput = sum_Output
         
     def __str__(self):
-        return f'ID:{self.sumOutput}                                           '
+        return f'{self.sumOutput}                                           '
 class Connections:
     
     innovation_ID = int()
@@ -66,15 +66,9 @@ class Connections:
       self.innovation_ID = lookup_table[self.in_node_ID,self.out_Node_ID]
       
     def __str__(self):
-        return f'{self.innovation_ID} : {self.conn_Weight}          '   
-class Brain():
+        return f'{self.innovation_ID} : {self.conn_Weight}          '
     
-    globalVariableObj = None
-    nodeList = []
-    connList = []
-    layerCount = 0
-    layers = None
-    nodeLayer = tuple()
+class Brain():
     def initNodes(self):
         '''
         Generate input Nodes,
@@ -110,7 +104,21 @@ class Brain():
     def initConnections(self):
         
        
-        
+        def initInputOutputConnections():
+         threshold = self.globalVariableObj.percentageConnections
+         for z in range(self.globalVariableObj.outputNodes):
+            outputNode = self.nodeList[self.globalVariableObj.inputNodes + self.globalVariableObj.hiddenNodes + 1 + z]
+            for y in range (self.globalVariableObj.inputNodes+1):
+                inputNode = self.nodeList[y]
+                randomNumber = random.random()
+                if randomNumber >= threshold:
+                    setEnnabled = True
+                else:
+                    setEnnabled = False
+                connection = Connections(inputNode.nodeIdentifier, outputNode.nodeIdentifier,
+                                         random.randint(-10, 10), setEnnabled, False)
+                self.connList.append(connection)
+                
         def initOutputHiddenConnections():
             threshold = self.globalVariableObj.percentageConnections
             for z in range(self.globalVariableObj.outputNodes):
@@ -141,20 +149,29 @@ class Brain():
                    connection = Connections(inputNode.nodeIdentifier, hiddenNode.nodeIdentifier,
                                             random.randint(-10,10), setEnnabled, False)
                    self.connList.append(connection)
-        
-        initHiddenInputConnections()
-        initOutputHiddenConnections()
+        if self.globalVariableObj.hiddenNodes !=0:     
+         initHiddenInputConnections()
+         initOutputHiddenConnections()
+        else:
+            initInputOutputConnections()
     def __init__(self, globalVariableObj = GlobalVariables):
         self.globalVariableObj = globalVariableObj
+        self.nodeList = []
+        self.connList = []
+        self.layerCount=0
+        self.layers = None
+        self.nodeLayer = tuple()
         self.nodeLayer = (self.globalVariableObj.inputNodes+1, self.globalVariableObj.hiddenNodes, self.globalVariableObj.outputNodes)
         if self.globalVariableObj.hiddenNodes == 0:
             self.layerCount == 1
             self.layers ==2
+            self.initNodes()
+            self.initConnections()
         else:
             self.layerCount == 2
             self.layers == 3
-        self.initNodes()
-        self.initConnections()
+            self.initNodes()
+            self.initConnections()
         
     def loadInputs(self, inputList = tuple()):
         if len(inputList) != self.globalVariableObj.inputNodes:
@@ -182,36 +199,118 @@ class Brain():
                 finalNodeOutput = 1/(1+ math.exp(-(sum(sumOutputs))))
                 self.nodeList[i].sumOutput = finalNodeOutput
                 
-    def get_output(self):
+    def get_output(self, node_number):
         outputs = list()
         for i in range(len(self.nodeList)):
-            if self.nodeList[i].nodeType in ['Output']:
-                outputs.append(self.nodeList[i].sumOutput)
-        return outputs
+         if (self.nodeList[i].nodeType in ['Output']) and (self.nodeList[i].nodeIdentifier == node_number):
+          return self.nodeList[i].sumOutput
                 
-                    
     
+                    
+    def calculate_fitness(self, predicted_value, desired_value, previous_fitness_scores=None):
+     """
+    Calculate fitness based on squared difference between predicted and desired values.
+
+    Parameters:
+    - predicted_value (float): The predicted value from the sigmoid activation function (between 0 and 1).
+    - desired_value (int): The desired value (either 0 or 1).
+    - previous_fitness_scores (list, optional): List of previous fitness scores.
+
+    Returns:
+    - float: Fitness score between 0 and 1.
+    """
+    # Ensure the predicted value is within the valid range (0 to 1)
+     predicted_value = max(0.0, min(1.0, float(predicted_value)))
+
+    # Calculate squared difference between predicted and desired values
+     squared_difference = (predicted_value - float(desired_value)) ** 2
+
+    # Normalize the fitness score to be between 0 and 1
+     fitness_score = 1 - squared_difference
+
+    # Accumulate previous fitness scores
+     if previous_fitness_scores is not None:
+        fitness_score += previous_fitness_scores
+
+     return fitness_score
+
+    
+class Run_Test():
+    
+    def __init__(self, globalVariableObj=GlobalVariables(2, 1, 0, 0)):
+        self.variables = globalVariableObj
+        self.outputs = list()
+        self.fitness = list()
+        for i in range(50):
+            arr_population = Brain(self.variables)  # Create a new instance of Brain in each iteration
+            self.outputs.append(arr_population)
+        for i in range(len(self.outputs)):
+             self.outputs[i].loadInputs((0, 1))
+             self.outputs[i].run_network()
+             out = self.outputs[i].get_output(4)
+             fitness_score = self.outputs[i].calculate_fitness(out, 1)
+             self.fitness.append(fitness_score)
+        for i in range(len(self.outputs)):
+             self.outputs[i].loadInputs((0, 0))
+             self.outputs[i].run_network()
+             out = self.outputs[i].get_output(4)
+             fitness_score = self.outputs[i].calculate_fitness(out, 0, self.fitness[i])
+             self.fitness[i] = fitness_score
+        for i in range(len(self.outputs)):
+             self.outputs[i].loadInputs((1, 1))
+             self.outputs[i].run_network()
+             out = self.outputs[i].get_output(4)
+             fitness_score = self.outputs[i].calculate_fitness(out, 0, self.fitness[i])
+             self.fitness[i] = fitness_score
+        for i in range(len(self.outputs)):
+             self.outputs[i].loadInputs((1, 1))
+             self.outputs[i].run_network()
+             out = self.outputs[i].get_output(4)
+             fitness_score = self.outputs[i].calculate_fitness(out, 1, self.fitness[i])
+             self.fitness[i] = fitness_score
+
+    def getFitness(self):
+        return self.fitness
+
 def main():
- test = GlobalVariables(3,1,0,0) 
- for i in range(50):
-  BRAIN = Brain(test)
-  BRAIN.loadInputs((0,0,1))
-  BRAIN.run_network()
-  outputs = BRAIN.get_output()
-  x=5
- 
-
-
+    parameters = GlobalVariables(2, 1, 0, 0)
+    test = Run_Test(parameters)
+    fitness = test.getFitness()
+    
+    
+    '''
+    test = GlobalVariables(2, 1, 0, 0)
+    outputs = list()
+    fitness = list()
+    for i in range(50):
+        arr_population = Brain(test)  # Create a new instance of Brain in each iteration
+        outputs.append(arr_population)
+    for i in range(len(outputs)):
+         outputs[i].loadInputs((0,1))
+         outputs[i].run_network()
+         out = outputs[i].get_output(4)
+         fitness_score = outputs[i].calculate_fitness(out, 1)
+         fitness.append(fitness_score)
+    for i in range(len(outputs)):
+         outputs[i].loadInputs((0,0))
+         outputs[i].run_network()
+         out = outputs[i].get_output(4)
+         fitness_score = outputs[i].calculate_fitness(out, 0, fitness[i])
+         fitness[i] = fitness_score
+    for i in range(len(outputs)):
+         outputs[i].loadInputs((1,1))
+         outputs[i].run_network()
+         out = outputs[i].get_output(4)
+         fitness_score = outputs[i].calculate_fitness(out, 0, fitness[i])
+         fitness[i] = fitness_score
+    for i in range(len(outputs)):
+         outputs[i].loadInputs((1,1))
+         outputs[i].run_network()
+         out = outputs[i].get_output(4)
+         fitness_score = outputs[i].calculate_fitness(out, 1, fitness[i])
+         fitness[i] = fitness_score
+    return fitness
+'''
 
 if __name__=="__main__": 
-    main() 
-
-
-
-
-
-
-
-
-
-
+ outputs = main() 

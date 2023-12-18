@@ -4,20 +4,22 @@ import tkinter as tk
 
 class DrawBrain:
     
-    def __init__(self, inputNodes,hiddenNodes, outputNodes, percConnections):
-        globalVariable = GlobalVariables(inputNodes, outputNodes, hiddenNodes, percConnections)
-        brain = Brain(globalVariable)
-        num_layers = len(brain.nodeLayer)
-        num_nodes = brain.nodeLayer
+    def __init__(self, brain = Brain()):
+        self.brain = Brain(self.globalVariable)
+        self.num_layers = len(self.brain.nodeLayer)
+        self.num_nodes = self.brain.nodeLayer
         self.create_tkinter_window()
-        canvas, rectangle_indexes = self.create_outlined_rectangle(1400, 900, num_layers)
-        nodes = self.draw_nodes(canvas, rectangle_indexes, num_nodes, brain.nodeList)
-        self.draw_connections(canvas, nodes, brain.connList, brain.nodeList)
+        self.canvas, self.rectangle_indexes = self.create_outlined_rectangle(1400, 900, self.num_layers)
+        self.nodes = self.draw_nodes(self.canvas, self.rectangle_indexes, self.num_nodes, self.brain.nodeList)
+        self.draw_connections(self.canvas, self.nodes, self.brain.connList, self.brain.nodeList)
         self.root.mainloop()
     
     
     
-    
+    def run_test(self,inputs, output):
+        self.brain.loadInputs(inputs)
+        self.brain.run_network()
+        out = self.brain.get_output(output)
     
     def draw_connections(self, canvas, node_indexes, conn_list, node_list):
         for i in range(len(conn_list)):
@@ -138,4 +140,10 @@ class DrawBrain:
         return canvas, rectangle_indexes
 
 if __name__ == "__main__":
-    window = DrawBrain(3,0,1,0)
+    inputNodes = 2
+    hiddenNodes = 0
+    outputNodes = 1
+    percConnections = 0
+    inputs = (0,1)
+    output = 4
+    window = DrawBrain(inputNodes,hiddenNodes,outputNodes,percConnections,inputs,output)
