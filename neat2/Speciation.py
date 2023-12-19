@@ -116,34 +116,46 @@ class Speciate:
  
     def speciateGen0(self, population):
         
-    
+        def recurrentSpeciate(grouping, species):
+            while 0 in species.values():
+                grouping +=1
+                speciesNil = {key:value for key, value in species.items() if value == 0 }
+                randomInd = random.choice(list(speciesNil.items()))
+                species.pop(randomInd[0])
+                randomInd = (randomInd[0], grouping)
+                for key,value in species.items():
+                        if self.getCompareDifferenceCD(randomInd[0], key) < 4.0 and value == 0:
+                                species[key] = grouping
+                        else: 
+                                pass
+                species.update({randomInd[0]:randomInd[1]})
+                recurrentSpeciate(grouping, species)
         
-                
-                
-        species.update({randomChoice:group})
-        # compare to level 0, if less than threshold, pop and update,
-        for 
+        species = dict()
+        grouping = 0
+        species = {individual: grouping for individual in population}
+        recurrentSpeciate(grouping, species)
+        return species
         
-        '''
-        def recursiveSpeciate(group, dictionaryGrouping, brainOutThreshold, population) :
-            groupN = group + 1
-            for i in range(len(population)):
-                if brainOutThreshold is not population[i] and self.getCompareDifferenceCD(brainOutThreshold, population[i]) >=4.0:
-                    recursiveSpeciate(groupN, dictionaryGrouping,population[i], population)
-                elif:
-                    dictionaryGrouping.update({population[i] : group})
-        group = 1
-        group1obj = random.choice(population)
-        dictionaryGrouping = dict()
-        dictionaryGrouping.update({group1obj:group})
-        for i in range(len(population)):
-            if group1obj is not population[i] and self.getCompareDifferenceCD(group1obj, population[i]) >=4.0:
-                recursiveSpeciate(group, dictionaryGrouping, population[i], population)
-            elif group1obj is not population[i]:
-                dictionaryGrouping.update({population[i] : group})
-            else:
-                pass
-        '''
+    def getUniqueValues(self, dictionary = dict, species = dict):
+         # Use set to get unique values
+         unique_values = set(dictionary.values())
+
+         # Initialize a dictionary to store the count of each unique value
+         value_counts = {value: 0 for value in unique_values}
+
+         # Count occurrences of each unique value
+         for value in dictionary.values():
+          value_counts[value] += 1
+         
+          #correspondingly sort species
+          sorted_species = dict(sorted(species.items, key=lambda item: item[1]))  
+         
+            
+         # count the length of value counts,
+         #store the value in an object
+         #loop though each j of the fitness , dividing the corresponding
+         return value_counts
         
                     
                 
@@ -167,7 +179,8 @@ class Speciate:
      d = self.getDisjointGenesD(obj1, obj2)
      w = self.getWeightAverageW(obj1, obj2)
      CD = self.getCompareDifferenceCD(obj1, obj2)
-     self.speciateGen0(test.outputs)
+     species = self.speciateGen0(test.outputs)
+     vc = self.getUniqueValues(species)
 
      
 
