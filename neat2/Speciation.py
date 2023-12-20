@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 
 import random
 from globalVariables import *
@@ -7,6 +7,9 @@ from BrainGui import *
 class Speciate:
     '''
     ''' 
+    
+            
+    
     def getCompareDifferenceCD(self, brainA, brainB):
         c1 = 1.0
         c2 = 1.0
@@ -137,7 +140,7 @@ class Speciate:
         recurrentSpeciate(grouping, species)
         return species
         
-    def getUniqueValues(self, dictionary = dict, species = dict):
+    def getOffSpring(self, dictionary = dict, species = list):
          # Use set to get unique values
          unique_values = set(dictionary.values())
 
@@ -147,40 +150,58 @@ class Speciate:
          # Count occurrences of each unique value
          for value in dictionary.values():
           value_counts[value] += 1
+         #Zip together the species groups with the fitness values
+         zippedFitnessGroup = list(zip(dictionary.values(), species))
+         #obtain the Fa value for reach fitness
+         for key, value in value_counts.items():
+             #loop through the count of each group,
+             for i in range(len(zippedFitnessGroup)):
+              if key == zippedFitnessGroup[i][0]:
+                  #if the zipped group is equal to the counted group,
+                  fa = zippedFitnessGroup[i][1]/value
+                  #divide the fitness by the count to obtain the fa, append to the tuple,
+                  zippedFitnessGroup[i]= (zippedFitnessGroup[i][0], zippedFitnessGroup[i][1], fa )
+        
+        # generate the sum total average
+         newFitness = list()  
+         #loop through the group / frequency dict,
+         for key,value in value_counts.items():
+             #create a variable to sum up grouped fa values,
+             nAvgFa = 0
+             #loop through the zipped fitness and group values,
+             for i in range(len(zippedFitnessGroup)):
+                 #if the group / frequency dict group matches the tuple group, sum the value into the 
+                 if key == zippedFitnessGroup[i][0]:
+                     nAvgFa += zippedFitnessGroup[i][2]
+            #Once all the Fa values are summed, divide by the value, ie             
+             nAvgFa = nAvgFa / value 
+             newFitness.append(nAvgFa)
+         gloAvgCount = 0    
+         #get global average 
+         for i in range(len(zippedFitnessGroup)):
+             gloAvgCount += zippedFitnessGroup[i][2]
+         gloAvgCount = gloAvgCount / len(zippedFitnessGroup)
+             
+         #allowed offspring = newAvgFofA / GlobalAverage
+         #create a new dictionary to store new offspring,
+         offspring = dict()
+         for key,value in value_counts.items():
+             offspring.update({key: round(newFitness[key-1] / gloAvgCount *value)})
+             
          
-          #correspondingly sort species
-          sorted_species = dict(sorted(species.items, key=lambda item: item[1]))  
          
-            
+         
          # count the length of value counts,
          #store the value in an object
          #loop though each j of the fitness , dividing the corresponding
-         return value_counts
+         return offspring, zippedFitnessGroup
         
                     
-                
-                
-        
-       
- 
-    
-     
-         
-         
-     
-     
-     
     def __init__(self):
      parameters = GlobalVariables(2, 1, 0, 0)
      test = Run_Test(parameters)
-     obj1 = test.outputs[1]
-     obj2 = test.outputs[0]
-     e = self.getExcessGenesE(obj1, obj2)
-     d = self.getDisjointGenesD(obj1, obj2)
-     w = self.getWeightAverageW(obj1, obj2)
-     CD = self.getCompareDifferenceCD(obj1, obj2)
-     species = self.speciateGen0(test.outputs)
-     vc = self.getUniqueValues(species)
+     offspring_Categories, zippedGroups = self.getOffSpring(self.speciateGen0(test.outputs), test.fitness)
+     return offspring_Categories, zippedGroups
 
      
 
@@ -188,4 +209,4 @@ def main():
     speciate = Speciate()
 
 if __name__=="__main__": 
- outputs = main() 
+  outputs = main() 
