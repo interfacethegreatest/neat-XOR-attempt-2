@@ -8,7 +8,12 @@ class Speciate:
     '''
     ''' 
     
-            
+    
+    
+    def __str__(self):
+        pass
+        
+        
     
     def getCompareDifferenceCD(self, brainA, brainB):
         c1 = 1.0
@@ -127,7 +132,7 @@ class Speciate:
                 species.pop(randomInd[0])
                 randomInd = (randomInd[0], grouping)
                 for key,value in species.items():
-                        if self.getCompareDifferenceCD(randomInd[0], key) < 4.0 and value == 0:
+                        if self.getCompareDifferenceCD(randomInd[0], key) < self.compatibilityThreshold and value == 0:
                                 species[key] = grouping
                         else: 
                                 pass
@@ -196,17 +201,25 @@ class Speciate:
          #loop though each j of the fitness , dividing the corresponding
          return offspring, zippedFitnessGroup
         
-                    
-    def __init__(self):
-     parameters = GlobalVariables(2, 1, 0, 0)
-     test = Run_Test(parameters)
-     offspring_Categories, zippedGroups = self.getOffSpring(self.speciateGen0(test.outputs), test.fitness)
-     return offspring_Categories, zippedGroups
+    
+    def returnResult(self):
+        return self.test, self.offspring_Categories, self.zippedGroups
+                
+    def __init__(self, speciesTargetSize):
+     self.parameters = GlobalVariables(2, 1, 0, 0)
+     self.test = Run_Test(self.parameters, population_size=50)
+     self.compatibilityThreshold = 2.0
+     self.offspring_Categories, self.zippedGroups = self.getOffSpring(self.speciateGen0(self.test.outputs), self.test.fitness)
+     self.populationSize = len(self.zippedGroups)
+     self.speciesTarget = speciesTargetSize
+     self.gens = 1
+     
+     self.speciesSize = len(self.offspring_Categories)
 
      
 
 def main():
-    speciate = Speciate()
+    speciate = Speciate(5)
 
 if __name__=="__main__": 
   outputs = main() 

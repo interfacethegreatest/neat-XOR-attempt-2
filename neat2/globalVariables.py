@@ -237,11 +237,11 @@ class Brain():
     
 class Run_Test():
     
-    def __init__(self, globalVariableObj=GlobalVariables(2, 1, 0, 0)):
+    def __init__(self, globalVariableObj=GlobalVariables(2, 1, 0, 0), population_size = int):
         self.variables = globalVariableObj
         self.outputs = list()
         self.fitness = list()
-        for i in range(50):
+        for i in range(population_size):
             arr_population = Brain(self.variables)  # Create a new instance of Brain in each iteration
             self.outputs.append(arr_population)
         for i in range(len(self.outputs)):
