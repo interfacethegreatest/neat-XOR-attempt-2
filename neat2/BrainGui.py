@@ -146,4 +146,6 @@ if __name__ == "__main__":
     percConnections = 0
     inputs = (0,1)
     output = 4
-    window = DrawBrain(inputNodes,hiddenNodes,outputNodes,percConnections,inputs,output)
+    gv = GlobalVariables(inputNodes, outputNodes, hiddenNodes, percConnections)
+    brain = Brain()
+    window = DrawBrain(brain)

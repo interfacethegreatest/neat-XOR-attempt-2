@@ -56,6 +56,7 @@ class Connections:
     conn_Weight = float()
     ennabled = bool()
     is_Recurrent = bool()
+    connectionLayer = int()
     
     def __init__(self, in_Nodes, out_Nodes,conn_Weight, ennabled, is_Recurrent):
       self.in_node_ID = in_Nodes
@@ -69,6 +70,106 @@ class Connections:
         return f'{self.innovation_ID} : {self.conn_Weight}          '
     
 class Brain():
+    
+    def addNode(self,):
+        #select a random connection as the place for the node.
+        
+      randomConnection = random.choice(self.connList)
+      randomConnection.ennabled = False
+      nodeLayer = self.nodeList[randomConnection.out_Node_ID].nodeLayer
+      newNode = Node(len(self.nodeList)), 2, nodeLayer, sum_Input, sum_Output)
+    
+    
+    
+    def addConnection(self, isValid = bool, isRecurrent = bool, count = int):
+        '''
+        Could use further testing
+        Recursive function used to validate nodes and generate a new connection.
+        Conditions are:
+            nodes cannot be same in and out node
+            nodes connot be in same layer
+            cannot be already existing connection
+
+        Parameters
+        ----------
+        isValid : TYPE, optional
+            Used to confirm the connection is valid and break the recursive function. The default is bool.
+        isRecurrent : TYPE, optional
+            Set by the user to determine whether recursive functions are turned off for the connection. The default is bool.
+        Returns
+        -------
+        A new connection in self.connList.
+
+        '''
+        if count > 20:
+            isValid = True
+        while isValid == False:
+         count+=1
+         if isRecurrent:
+              inNode = random.choice(self.nodeList)
+              outNode = random.choice(self.nodeList)
+              potentialID = lookup_table[inNode.nodeIdentifier, outNode.nodeIdentifier]
+              if any(connection.innovation_ID == potentialID for connection in self.connList):
+                  self.addConnection(isValid, isRecurrent, count)
+                  matching_connection = next((connection for connection in self.connList if connection.innovation_ID == potentialID), None) 
+                  if matching_connection.ennabled == False:
+                      if random.random() >= 0.75:
+                          matching_connection.ennabled == True
+                  break
+              if inNode == outNode:
+                  self.addConnection(isValid, isRecurrent, count)
+                  break
+              if inNode.nodeLayer == outNode.nodeLayer:
+                  self.addConnection(isValid, isRecurrent, count)
+                  break
+              isValid = True
+              check = random.random()
+              if check >=0.95:
+               newConnection = Connections(inNode.nodeIdentifier, outNode.nodeIdentifier, random.randint(-10, 10), True, isRecurrent)
+               self.connList.append(newConnection)
+         else:
+                inNode = random.choice(self.nodeList)
+                outNode = random.choice(self.nodeList)
+                potentialID = lookup_table[inNode.nodeIdentifier, outNode.nodeIdentifier]
+                if any(connection.innovation_ID == potentialID for connection in self.connList):
+                    self.addConnection(isValid, isRecurrent, count)
+                    break
+                if inNode == outNode:
+                    self.addConnection(isValid, isRecurrent, count)
+                    break
+                if inNode.nodeLayer == outNode.nodeLayer:
+                    self.addConnection(isValid, isRecurrent, count)
+                    break
+                if inNode.nodeLayer > outNode.nodeLayer:
+                    self.addConnection(isValid, isRecurrent, count)
+                    break
+                isValid = True 
+                check = random.random()
+                if check >=0.95:
+                 newConnection = Connections(inNode, outNode, random.randint(-10, 10), self.globalVariableObj.percentageConnections > random.random(), isRecurrent)
+                 self.connList.append(newConnection)
+             
+            
+            
+             
+        
+        
+    def mutate(self):
+        if random.random() >= 0.8:
+         for connection in self.connList:
+             if random.random() <=0.1:
+                 connection.conn_Weight = random.randint(-10, 10)
+             else:
+                 coinflip = random.randint(1, 2)
+                 weightAdjustment = connection.conn_Weight *0.2
+                 if coinflip == 1 :
+                     connection.conn_Weight + weightAdjustment
+                 else:
+                     connection.conn_Weight - weightAdjustment
+                     
+                
+    
+    
     def initNodes(self):
         '''
         Generate input Nodes,
@@ -85,7 +186,7 @@ class Brain():
             node = Node(i+1, 0,0,0,0)
             self.nodeList.append(node)
             
-        nodeBias = Node(self.globalVariableObj.inputNodes+1, 1,0,0,0)
+        nodeBias = Node(self.globalVariableObj.inputNodes+1, 1,1,0,0)
         '''
         hidden node initiation.
         '''
@@ -99,8 +200,13 @@ class Brain():
         output node initiation
         '''
         for i in range(self.globalVariableObj.outputNodes):
-            node = Node(len(self.nodeList)+1, 3, self.layerCount, 0,0)
+            if self.globalVariableObj.hiddenNodes == 0:
+                layers = 2
+            else:
+                layers = 3
+            node = Node(len(self.nodeList)+1, 3, layers, 0,0)
             self.nodeList.append(node)
+            
     def initConnections(self):
         
        
@@ -154,6 +260,7 @@ class Brain():
          initOutputHiddenConnections()
         else:
             initInputOutputConnections()
+    
     def __init__(self, globalVariableObj = GlobalVariables):
         self.globalVariableObj = globalVariableObj
         self.nodeList = []
@@ -274,8 +381,14 @@ class Run_Test():
 
 def main():
     parameters = GlobalVariables(2, 1, 0, 0)
+    brain = Brain(parameters)
+    connection = Connections(1, 4, 1, True, True)
+    brain.addConnection(False, True, 0)
+    x=1
+    '''
     test = Run_Test(parameters)
     fitness = test.getFitness()
+    '''
     
     
     '''
