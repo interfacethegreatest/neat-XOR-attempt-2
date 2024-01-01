@@ -4,8 +4,8 @@ import tkinter as tk
 
 class DrawBrain:
     
-    def __init__(self, brain = Brain()):
-        self.brain = Brain(self.globalVariable)
+    def __init__(self, brain):
+        self.brain = brain
         self.num_layers = len(self.brain.nodeLayer)
         self.num_nodes = self.brain.nodeLayer
         self.create_tkinter_window()
@@ -147,5 +147,5 @@ if __name__ == "__main__":
     inputs = (0,1)
     output = 4
     gv = GlobalVariables(inputNodes, outputNodes, hiddenNodes, percConnections)
-    brain = Brain()
+    brain = Brain(gv)
     window = DrawBrain(brain)

@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#annotate add connection and add node, 02/01/2024 -
 
 # Initialize an empty lookup table
 import random
@@ -72,12 +71,46 @@ class Connections:
 class Brain():
     
     def addNode(self,):
-        #select a random connection as the place for the node.
         
-      randomConnection = random.choice(self.connList)
-      randomConnection.ennabled = False
-      nodeLayer = self.nodeList[randomConnection.out_Node_ID].nodeLayer
-      newNode = Node(len(self.nodeList)), 2, nodeLayer, sum_Input, sum_Output)
+      def getNodeLayer(self, layerCount, node = Node):
+        '''
+        
+        getNodeLayer is used to recursively iterate through the node list to adjust node layers when a new node
+        is inserted,
+        as a node is found, its connections are followed back to a prior node, this then
+        
+        '''
+        #break cond
+        while node.nodeType != 'I/P':
+            for connection in self.connList:
+                if connection.in_node_ID == node.nodeIdentifier and connection.ennabled == True:
+                    layerCount+=1
+                    node = self.nodeList[connection.in_node_ID-1]
+                    getNodeLayer(self, layerCount, node)
+                    return layerCount
+            
+            
+            
+            
+        #select a random ENNABLED connection as the place for the node.
+      randomConnection = None
+      while randomConnection is None or randomConnection.ennabled == False or randomConnection.is_Recurrent == True:
+       randomConnection = random.choice(self.connList)
+       inID = randomConnection.in_node_ID
+       outID = randomConnection.out_Node_ID
+       nodeLayer = self.nodeList[randomConnection.out_Node_ID-1].nodeLayer
+      newNode = Node(len(self.nodeList), 2, nodeLayer, 0, 0)
+      self.nodeList.append(newNode)
+      randomConnection.ennabled == False
+      # generate two new connections
+      firstConnection = Connections(self.nodeList[inID-1].nodeIdentifier, newNode.nodeIdentifier,
+                                    randomConnection.conn_Weight, True, False)
+      secondConnection = Connections(newNode.nodeIdentifier, self.nodeList[outID-1].nodeIdentifier,
+                                    random.randint(-10, 10), True, False)
+      #loop through node list,
+      for node in self.nodeList:
+              node.nodeLayer = getNodeLayer(self, 1, node)
+          
     
     
     
@@ -105,29 +138,50 @@ class Brain():
             isValid = True
         while isValid == False:
          count+=1
+         #generate two different loops whether if recurrent or not,
          if isRecurrent:
+             #select two nodes at random,
               inNode = random.choice(self.nodeList)
               outNode = random.choice(self.nodeList)
+              # generate an ID which , if connected they would create,
               potentialID = lookup_table[inNode.nodeIdentifier, outNode.nodeIdentifier]
+              #the next three if conditions, look for conditions mentioned above in the greentext,
+              # these are incorrect conditions
+              #if the connection already exists,
               if any(connection.innovation_ID == potentialID for connection in self.connList):
+                  #recall the recursive function
                   self.addConnection(isValid, isRecurrent, count)
+                  #for the already existing connection, there is a 25 % chance to re-ennable the connection.
                   matching_connection = next((connection for connection in self.connList if connection.innovation_ID == potentialID), None) 
                   if matching_connection.ennabled == False:
                       if random.random() >= 0.75:
                           matching_connection.ennabled == True
+                  #break out of the recursion once an incorrect selection is found.
                   break
+            # if the randomly selected nodes are the same,
               if inNode == outNode:
+                  # recursively call the function,
                   self.addConnection(isValid, isRecurrent, count)
                   break
+              # if the randomly selected nodes are in the same layer, recursively call the function
               if inNode.nodeLayer == outNode.nodeLayer:
                   self.addConnection(isValid, isRecurrent, count)
                   break
               isValid = True
               check = random.random()
+              #if the random nodes do not occupy the incorrect conditions, there is a 95% chance to ,
+              #generate a connection between the randomly selected nodes,
               if check >=0.95:
                newConnection = Connections(inNode.nodeIdentifier, outNode.nodeIdentifier, random.randint(-10, 10), True, isRecurrent)
+               # if the connection goes backwards, set recurrent to true
+               if inNode.nodeLayer > outNode.nodeLayer:
+                   newConnection.is_Recurrent = True
+               else:
+                   newConnection.is_Recurrent = False
                self.connList.append(newConnection)
          else:
+             #else if the add a connection sets, recurrent to false, add this fact to the list of conditions to recursively,
+             #call the function again,
                 inNode = random.choice(self.nodeList)
                 outNode = random.choice(self.nodeList)
                 potentialID = lookup_table[inNode.nodeIdentifier, outNode.nodeIdentifier]
@@ -382,8 +436,8 @@ class Run_Test():
 def main():
     parameters = GlobalVariables(2, 1, 0, 0)
     brain = Brain(parameters)
-    connection = Connections(1, 4, 1, True, True)
     brain.addConnection(False, True, 0)
+    brain.addNode()
     x=1
     '''
     test = Run_Test(parameters)
