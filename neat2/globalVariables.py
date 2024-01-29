@@ -4,6 +4,7 @@
 import random
 import math
 import numpy as np
+from BrainGui import *
 
 x_max = 1000
 y_max = 1000
@@ -46,7 +47,7 @@ class Node:
         self.sumOutput = sum_Output
         
     def __str__(self):
-        return f'{self.sumOutput}                                           '
+        return f'ID {self.nodeIdentifier} : Output {self.sumOutput} : Layer : {self.nodeLayer}                                          '
 class Connections:
     
     innovation_ID = int()
@@ -66,50 +67,73 @@ class Connections:
       self.innovation_ID = lookup_table[self.in_node_ID,self.out_Node_ID]
       
     def __str__(self):
-        return f'{self.innovation_ID} : {self.conn_Weight}          '
+        return f'{self.in_node_ID}-->{self.out_Node_ID} W({self.conn_Weight})         '
     
 class Brain():
     
+    
+    def getNodesAtLayer(self, layer = int):
+        
+        '''
+        returns list of nodes at a certain layer
+        '''
+        return [node for node in self.nodeList if node.nodeLayer == layer]
+
+            
+    def getNodesInOrder(self):
+        orderedNodeList = list()
+        counter= 1
+        while counter <= self.layerCount:
+            orderedNodeList += self.getNodesAtLayer(counter)
+            counter+=1
+        return orderedNodeList
+        
+        
+        
     def addNode(self,):
         
-      def getNodeLayer(self, layerCount, node = Node):
-        '''
+      def getNodeLayer(self, layerCount, node = Node): 
+          
+          
+          
+        while node.nodeType not in ('Output'):
+         #return the list of connection objects which connect to node.
+         connections = [connection for connection in self.connList if connection.in_node_ID == node.nodeIdentifier and connection.ennabled == True and connection.is_Recurrent == False]
         
-        getNodeLayer is used to recursively iterate through the node list to adjust node layers when a new node
-        is inserted,
-        as a node is found, its connections are followed back to a prior node, this then
+         #return the list of nodes which end at the given connection in the connections list,
+         node_Connections = [node for connection in connections for node in self.nodeList if node.nodeIdentifier == connection.out_Node_ID]
         
-        '''
-        #break cond
-        while node.nodeType != 'I/P':
-            for connection in self.connList:
-                if connection.in_node_ID == node.nodeIdentifier and connection.ennabled == True:
-                    layerCount+=1
-                    node = self.nodeList[connection.in_node_ID-1]
-                    getNodeLayer(self, layerCount, node)
-                    return layerCount
+         layerCount+=1
+         for node in node_Connections:
+            if layerCount > node.nodeLayer:
+                if layerCount > self.layerCount:
+                    self.layerCount = layerCount
+                node.nodeLayer = layerCount
+            getNodeLayer(self,layerCount, node)
             
-            
-            
-            
+        
+    
         #select a random ENNABLED connection as the place for the node.
       randomConnection = None
       while randomConnection is None or randomConnection.ennabled == False or randomConnection.is_Recurrent == True:
        randomConnection = random.choice(self.connList)
        inID = randomConnection.in_node_ID
        outID = randomConnection.out_Node_ID
-       nodeLayer = self.nodeList[randomConnection.out_Node_ID-1].nodeLayer
-      newNode = Node(len(self.nodeList), 2, nodeLayer, 0, 0)
+      newNode = Node(len(self.nodeList)+1, 2, 0, 0, 0)
       self.nodeList.append(newNode)
       randomConnection.ennabled == False
+      index = self.connList.index(randomConnection)
+      self.connList.pop(index)
       # generate two new connections
       firstConnection = Connections(self.nodeList[inID-1].nodeIdentifier, newNode.nodeIdentifier,
                                     randomConnection.conn_Weight, True, False)
       secondConnection = Connections(newNode.nodeIdentifier, self.nodeList[outID-1].nodeIdentifier,
                                     random.randint(-10, 10), True, False)
+      self.connList.append(firstConnection)
+      self.connList.append(secondConnection)
       #loop through node list,
       for node in self.nodeList:
-              node.nodeLayer = getNodeLayer(self, 1, node)
+              getNodeLayer(self, 1, node)
           
     
     
@@ -125,9 +149,9 @@ class Brain():
 
         Parameters
         ----------
-        isValid : TYPE, optional
-            Used to confirm the connection is valid and break the recursive function. The default is bool.
-        isRecurrent : TYPE, optional
+        isValid : TYPE, bool
+            Used to confirm the connection is valid and break the recursive function. The default is False to ennable recursion.
+        isRecurrent : TYPE, bool
             Set by the user to determine whether recursive functions are turned off for the connection. The default is bool.
         Returns
         -------
@@ -237,7 +261,7 @@ class Brain():
         input & bias node initiation
         '''
         for i in range(self.globalVariableObj.inputNodes):
-            node = Node(i+1, 0,0,0,0)
+            node = Node(i+1, 0,1,0,0)
             self.nodeList.append(node)
             
         nodeBias = Node(self.globalVariableObj.inputNodes+1, 1,1,0,0)
@@ -321,8 +345,6 @@ class Brain():
         self.connList = []
         self.layerCount=0
         self.layers = None
-        self.nodeLayer = tuple()
-        self.nodeLayer = (self.globalVariableObj.inputNodes+1, self.globalVariableObj.hiddenNodes, self.globalVariableObj.outputNodes)
         if self.globalVariableObj.hiddenNodes == 0:
             self.layerCount == 1
             self.layers ==2
@@ -335,6 +357,24 @@ class Brain():
             self.initConnections()
         
     def loadInputs(self, inputList = tuple()):
+        '''
+        Load's input values into array'
+
+        Parameters
+        ----------
+        inputList : TYPE, tuple
+            DESCRIPTION. Load's input values into array, ignoring the bias node.'
+
+        Raises
+        ------
+        Exception
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        '''    
         if len(inputList) != self.globalVariableObj.inputNodes:
             raise Exception('Inputs are not equal to input layer nodes.')
         else:   
@@ -345,8 +385,42 @@ class Brain():
          else:
             self.nodeList[i].sumInput = 1
             self.nodeList[i].sumOutput = 1
+    
             
+    def run_network_node(self, node = Node):
+        for i in range(len(self.connList)):
+            if self.connList[i].out_Node_ID == node.nodeIdentifier and self.connList[i].ennabled:
+                connection_weight = self.connList
+                
+    
     def run_network(self):
+        '''
+        test
+
+        Returns
+        -------
+        None.
+
+        '''
+        counter = 2
+        while counter <= self.layerCount:
+            nodesAtLayer = self.getNodesAtLayer(counter)
+            counter+=1
+            for node in nodesAtLayer:
+                sumInput = 0
+                node.sumInput = 0
+                input_connections = [connection for connection in self.connList if node.nodeIdentifier == connection.out_Node_ID]
+                for connection in input_connections:
+                    for nodes in self.nodeList:
+                        if connection.in_node_ID == nodes.nodeIdentifier:
+                            sumInput+=(nodes.sumOutput*connection.conn_Weight)
+                node.sumInput = sumInput
+                finalNodeOutput = 1/(1+ math.exp(-(sumInput)))
+                node.sumOutput = finalNodeOutput
+                        
+        
+        
+        '''
         for i in range(len(self.nodeList)):
             if self.nodeList[i].nodeType in ['Hidden', 'Output']:
                 sumOutputs = list()
@@ -359,7 +433,7 @@ class Brain():
                 self.nodeList[i].sumInput = sum(sumOutputs)
                 finalNodeOutput = 1/(1+ math.exp(-(sum(sumOutputs))))
                 self.nodeList[i].sumOutput = finalNodeOutput
-                
+         '''       
     def get_output(self, node_number):
         outputs = list()
         for i in range(len(self.nodeList)):
@@ -436,8 +510,12 @@ class Run_Test():
 def main():
     parameters = GlobalVariables(2, 1, 0, 0)
     brain = Brain(parameters)
-    brain.addConnection(False, True, 0)
+    draw = DrawBrain(brain)
+    brain.addConnection(False, False, 0)
     brain.addNode()
+    draw = DrawBrain(brain)
+    brain.addNode()
+    draw = DrawBrain(brain)
     x=1
     '''
     test = Run_Test(parameters)

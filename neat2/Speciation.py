@@ -122,7 +122,7 @@ class Speciate:
         return d
  
  
-    def speciateGen0(self, population):
+    def speciation(self, population):
         
         def recurrentSpeciate(grouping, species):
             while 0 in species.values():
@@ -205,21 +205,22 @@ class Speciate:
     def returnResult(self):
         return self.test, self.offspring_Categories, self.zippedGroups
                 
-    def __init__(self, speciesTargetSize):
-     self.parameters = GlobalVariables(2, 1, 0, 0)
-     self.test = Run_Test(self.parameters, population_size=50)
-     self.compatibilityThreshold = 2.0
-     self.offspring_Categories, self.zippedGroups = self.getOffSpring(self.speciateGen0(self.test.outputs), self.test.fitness)
+    def __init__(self, test, speciesTargetSize, compatibilityThreshold):
+     self.compatibilityThreshold = compatibilityThreshold
+     self.test = test
+     self.speciate = self.speciation(self.test.outputs)
+     self.offspring_Categories, self.zippedGroups = self.getOffSpring(self.speciate, self.test.fitness)
      self.populationSize = len(self.zippedGroups)
      self.speciesTarget = speciesTargetSize
-     self.gens = 1
+    
      
      self.speciesSize = len(self.offspring_Categories)
 
      
 
 def main():
-    speciate = Speciate(5)
+    speciate = Speciate()
+    x = 5
 
 if __name__=="__main__": 
   outputs = main() 

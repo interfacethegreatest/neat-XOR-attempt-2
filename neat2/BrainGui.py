@@ -6,91 +6,26 @@ class DrawBrain:
     
     def __init__(self, brain):
         self.brain = brain
-        self.num_layers = len(self.brain.nodeLayer)
-        self.num_nodes = self.brain.nodeLayer
+        self.layers = self.brain.layerCount
         self.create_tkinter_window()
-        self.canvas, self.rectangle_indexes = self.create_outlined_rectangle(1400, 900, self.num_layers)
-        self.nodes = self.draw_nodes(self.canvas, self.rectangle_indexes, self.num_nodes, self.brain.nodeList)
-        self.draw_connections(self.canvas, self.nodes, self.brain.connList, self.brain.nodeList)
+        nodeLocations = self.draw_nodes(self.draw_border_rectangle(1200, 900))
+        self.draw_connections(nodeLocations)
+        self.print_objects_at_position(self.brain.connList, 1200, 20)
         self.root.mainloop()
-    
-    
-    
-    def run_test(self,inputs, output):
-        self.brain.loadInputs(inputs)
-        self.brain.run_network()
-        out = self.brain.get_output(output)
-    
-    def draw_connections(self, canvas, node_indexes, conn_list, node_list):
-        for i in range(len(conn_list)):
-            origin_node = conn_list[i].in_node_ID-1
-            end_node = conn_list[i].out_Node_ID-1
-            origin_coordinate = node_indexes[origin_node]
-            end_coordinate = node_indexes[end_node]
-            # Draw a line between the origin and end coordinates
-            if conn_list[i].ennabled:
-             canvas.create_line(origin_coordinate[0], origin_coordinate[1],
-                               end_coordinate[0], end_coordinate[1], fill="Green", width=2)
-            else:
-                 canvas.create_line(origin_coordinate[0], origin_coordinate[1],
-                                   end_coordinate[0], end_coordinate[1], fill="Red", width=2)
-                 
-            
-            # Calculate the center point of the line
-            center_x = (origin_coordinate[0] + end_coordinate[0]) / 2
-            center_y = (origin_coordinate[1] + end_coordinate[1]) / 2
-
-            # Loop through node indexes and print conn_list text slightly to the right
-            offset_right = 15  # Adjust this value for the right offset
-            for index, node_index in enumerate(node_indexes):
-            # Offset slightly to the right
-             text_x = node_index[0] + offset_right
-             text_y = node_index[1]
-             '''
-            # Print conn_list text to the right of each node
-             canvas.create_text(text_x, text_y, text=conn_list[index], fill="blue", font=("Arial", 8), anchor="w")
-              '''            
-       
-                
-    
-    def draw_nodes(self, canvas, rectangle_indexes, num_nodes_list, nodes):
-     centreList = list()
-     for rect_index, num_nodes in zip(rectangle_indexes, num_nodes_list):
-        # Get the coordinates of the rectangle
-        x0, y0, x1, y1 = canvas.coords(rect_index)
-
-        # Calculate the height of each node
-        if num_nodes > 0:
-         node_height = (y1 - y0) / num_nodes
-        else:
-            pass
         
-        # Draw nodes vertically within each rectangle
-        for i in range(num_nodes):
-            node_x0 = x0
-            node_y0 = y0 + i * node_height
-            node_x1 = x1
-            node_y1 = node_y0 + node_height
-            canvas.create_rectangle(node_x0, node_y0, node_x1, node_y1, fill="black") 
+        
+        
+    def print_objects_at_position(self, object_list, x, y):
+     for obj in object_list:
+        # Get the string representation of the object using its __str__ function
+        obj_str = obj.__str__()
 
-            # Calculate the center of the node
-            center_x = (node_x0 + node_x1) / 2
-            center_y = (node_y0 + node_y1) / 2
-            centreList.append((center_x, center_y))
-            # Draw a white circle at the center
-            radius = 10  # Set your desired radius value
-            canvas.create_oval(center_x - radius, center_y - radius, center_x + radius, center_y + radius, fill="white")
-            
-            
-     for y in range(len(centreList)):
-      canvas.create_text(centreList[y][0],centreList[y][1]+5, text= nodes[y], fill="blue", font=("Arial", 8), anchor = "center")
-     canvas.pack()
-     return centreList
+        # Print the string at the specified x, y position on the canvas
+        self.canvas.create_text(x, y, text=obj_str, fill="white")
 
-
-
-
-
+        # Increment y to move to the next line (adjust as needed)
+        y += 20  # You can adjust the value based on your preferred spacing
+    
     def create_tkinter_window(self):
         # Create the main window
         self.root = tk.Tk()
@@ -99,45 +34,125 @@ class DrawBrain:
         # Add widgets and functionality here if needed
         self.root.geometry("1400x900")
         self.root.configure(bg="black")
+        self.canvas = tk.Canvas(self.root, width=1400, height=900, bg="black")
+        self.canvas.pack()   
+        
+    
+    
 
-    def create_outlined_rectangle(self, width, height, num_subrectangles):
-        # Set the default border percentage
-        border_percentage = 10
+    def draw_connections(self, divided_rectangle_coordinates):
+     connection_list = self.brain.connList
 
-        # Calculate the dimensions of the inner rectangle
-        inner_width = width * (1 - border_percentage / 100)
-        inner_height = height * (1 - border_percentage / 100)
+     for connection in connection_list:
+        inloc = connection.in_node_ID
+        outloc = connection.out_Node_ID
+        in_coordinate, out_coordinate = None, None
 
-        # Calculate the border size
-        border_width = (width - inner_width) / 2
-        border_height = (height - inner_height) / 2
+        # Find the coordinates for inloc and outloc
+        for node, coordinate in divided_rectangle_coordinates:
+            if node.nodeIdentifier == inloc:
+                in_coordinate = coordinate
+            elif node.nodeIdentifier == outloc:
+                out_coordinate = coordinate
 
-        # Calculate the dimensions of each smaller rectangle
-        subrect_width = inner_width / num_subrectangles
-        subrect_height = inner_height
+        # Draw lines between the centers of inloc and outloc
+        if in_coordinate is not None and out_coordinate is not None:
+            in_center_x, in_center_y = (in_coordinate[0] + in_coordinate[2]) / 2, (in_coordinate[1] + in_coordinate[3]) / 2
+            out_center_x, out_center_y = (out_coordinate[0] + out_coordinate[2]) / 2, (out_coordinate[1] + out_coordinate[3]) / 2
+        
+        
+        if connection.ennabled and connection.is_Recurrent:
+         # Draw a line between the centers
+         self.canvas.create_line(in_center_x, in_center_y, out_center_x, out_center_y, fill="Blue", width=0.7, dash=(2, 2))
+        elif connection.ennabled:
+         self.canvas.create_line(in_center_x, in_center_y, out_center_x, out_center_y, fill="Green")
+        else:
+         self.canvas.create_line(in_center_x, in_center_y, out_center_x, out_center_y, fill="Red")
+        
+        
+        
+    
+    def draw_nodes(self, divided_rectangle_coordinates):
+     node_dict = {}  # Dictionary to store nodes with identifiers as keys
 
-        # Create a Canvas widget
-        canvas = tk.Canvas(self.root, width=width, height=height, bg="black")
-        canvas.pack()
+     for node, rect_coords in divided_rectangle_coordinates:
+        # Extract rectangle coordinates
+        rect_x1, rect_y1, rect_x2, rect_y2 = rect_coords
 
-        # Draw the outer rectangle (border)
-        canvas.create_rectangle(0, 0, width, height, outline="black", width=border_width, fill="")
+        # Calculate the center of the rectangle
+        center_x = (rect_x1 + rect_x2) / 2
+        center_y = (rect_y1 + rect_y2) / 2
 
-        # Draw the inner rectangle
-        canvas.create_rectangle(border_width, border_height, width - border_width, height - border_height, fill="black")
+        # Draw a small circle representing the node
+        radius = 5  # You can adjust the radius as needed
+        self.canvas.create_oval(center_x - radius, center_y - radius, center_x + radius, center_y + radius, fill="blue")
 
-        # Draw the smaller rectangles and store their indexes
-        rectangle_indexes = []
-        for i in range(num_subrectangles):
-            x0 = border_width + i * subrect_width
-            y0 = border_height
-            x1 = x0 + subrect_width
-            y1 = height - border_height
-            rect_index = canvas.create_rectangle(x0, y0, x1, y1, fill="black")
-            rectangle_indexes.append(rect_index)
+        # Print the node's __str__ function below the circle
+        text_x = center_x
+        text_y = center_y + radius + 5  # Add some space below the circle for the text
+        self.canvas.create_text(text_x, text_y, text=node.__str__(), fill="white")
+        
+        
+     return divided_rectangle_coordinates
 
-        # Return the canvas and the list of rectangle indexes
-        return canvas, rectangle_indexes
+
+
+        
+        
+    
+    
+    
+    def draw_border_rectangle(self, width, height, border_percentage=0.1):
+     rectangleList = list()
+     layer = 1
+     while layer <= self.layers:
+        nodes = self.brain.getNodesAtLayer(layer)
+        rectangleList.append(len(nodes))
+        layer += 1
+
+     border_x = width * border_percentage
+     border_y = height * border_percentage
+
+     x1 = border_x
+     y1 = border_y
+     x2 = width - border_x
+     y2 = height - border_y
+
+     total_rectangles = len(rectangleList)
+     rectangle_width = (x2 - x1) / total_rectangles
+
+     rectangle_coordinates = []  # List to store the coordinates of each sub-rectangle
+
+     for i in range(total_rectangles):
+        rect_x1 = x1 + i * rectangle_width
+        rect_x2 = rect_x1 + rectangle_width
+        rect_y1 = y1
+        rect_y2 = y2
+
+        self.canvas.create_rectangle(rect_x1, rect_y1, rect_x2, rect_y2, outline="black")
+        rectangle_coordinates.append((rect_x1, rect_y1, rect_x2, rect_y2))
+
+     # Divide each rectangle into equal horizontal divisions specified by rectangleList
+     divided_rectangle_coordinates = []
+     for i, (rect_x1, rect_y1, rect_x2, rect_y2) in enumerate(rectangle_coordinates):
+        total_divisions = rectangleList[i]
+
+        sub_rectangle_height = (rect_y2 - rect_y1) / total_divisions
+        sub_rectangle_width = rect_x2 - rect_x1
+
+        for j in range(total_divisions):
+            sub_rect_x1 = rect_x1
+            sub_rect_x2 = rect_x2
+            sub_rect_y1 = rect_y1 + j * sub_rectangle_height
+            sub_rect_y2 = sub_rect_y1 + sub_rectangle_height
+
+            self.canvas.create_rectangle(sub_rect_x1, sub_rect_y1, sub_rect_x2, sub_rect_y2, outline="black")
+            divided_rectangle_coordinates.append((sub_rect_x1, sub_rect_y1, sub_rect_x2, sub_rect_y2))
+     
+     nodeList = self.brain.getNodesInOrder()
+     divided_rectangle_coordinates = list(zip(nodeList, divided_rectangle_coordinates))
+     return divided_rectangle_coordinates
+
 
 if __name__ == "__main__":
     inputNodes = 2
@@ -147,5 +162,11 @@ if __name__ == "__main__":
     inputs = (0,1)
     output = 4
     gv = GlobalVariables(inputNodes, outputNodes, hiddenNodes, percConnections)
-    brain = Brain(gv)
-    window = DrawBrain(brain)
+    brain2 = Brain(gv)
+    brain2.loadInputs(inputs)
+    brain2.addConnection(False, False,0)
+    brain2.addNode()
+    brain2.addNode()
+    TEST = DrawBrain(brain2)
+    brain2.run_network()
+    window = DrawBrain(brain2)
